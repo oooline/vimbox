@@ -313,6 +313,9 @@ else
     cp $dir/_.vimrc ~/.vimrc
     echo '配置成功'
 fi
+if [ ! -d ~/.vimswp ]; then
+    mkdir ~/.vimswp
+fi
 
 echo ' '
 echo ' '

@@ -36,6 +36,7 @@ $ ./INSTALL.sh
 
 ### 使用说明
 INASTALL.sh 和 .vimrc 文件均有注释，在 .vimrc 底部包含有简单的说明和插件使用方法。
+Swap文件的位置在~/.vimswp中，如需还原默认位置，注释.vimrc中的配置即可。
 
 ### VIM工具盒说明
 这个配置工具是几年前的了，目前一直在用。 $./INSTALL.sh update 会通过 github 更新插件到最新版本，但不能保证更新之后配置文件有效或无bug（自行阅读新版本help修正）。
