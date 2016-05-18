@@ -463,14 +463,15 @@ let g:miniBufExplMapCTabSwitchBufs = 1
 map <C-Tab> :bn<CR>  "切换Buffer，右切换
 map <S-Tab> :bp<CR>  "切换Buffer，左切换
 
-map fuck :call AddAuthor():$o
-function AddAuthor()
+map ooshell :call OoShell()
+function OoShell()
     call setline(1,"#****************************************************")
-    call append(1,"#  Author: Liangzi - com")
-    call append(2,"#  " . "Last modified: " . strftime("%Y-%m-%d %H:%M"))
-    call append(3,"#  Filename: " . expand("%"))
-    call append(4,"#  Description: ")
-    call append(5,"#****************************************************")
+    call append(1,"#  Filename: " . expand("%"))
+    call append(2,"#  Version: 1.0")
+    call append(3,"#  Author: Leon(weippt.com)")
+    call append(4,"#  Last modified: " . strftime("%Y-%m-%d %H:%M"))
+    call append(5,"#  Description: ")
+    call append(6,"#****************************************************")
 endfunction
 
 "自动注释
@@ -479,7 +480,7 @@ let g:DoxygenToolkit_paramTag_pre="@param  "
 let g:DoxygenToolkit_returnTag="@return "
 "let g:DoxygenToolkit_blockHeader="----------------------------------------------------"
 "let g:DoxygenToolkit_blockFooter="----------------------------------------------------"
-let g:DoxygenToolkit_authorName="Liangzige...@gmail.com"
+let g:DoxygenToolkit_authorName="Leon"
 let s:licenseTag = "\<enter>Copyright(C)\<enter>"
 let s:licenseTag = s:licenseTag . "For free\<enter>"
 let s:licenseTag = s:licenseTag . "All right reserved"
