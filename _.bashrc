@@ -19,6 +19,7 @@ PS1='${debian_chroot:+($debian_chroot)}\[\033[01;31m\]\u\[\033[00m\]@\[\033[01;3
 #export HISTTIMEFORMAT
 #export HISTTIMEFORMAT="%F %T "
 
+#mount -t cifs //10.0.0.15/Codes -o username=leon,password=pass,uid=leon,gid=leon,dir_mode=0755 /var/www/WinCodes/ 
 #awk 'BEGIN { cmd="cp -i a a1"; print "n" |cmd; }
 #yes no| cp -iR cp1/* cp2
 
