@@ -1,323 +1,156 @@
-#!/bin/sh 
+#!/bin/bash 
 
-# 此脚本负责部署和升级，通过 【args】控制 :install  :update
+# vim安装升级脚本
 
 if [ $# != 1 ]; then
  echo 'Useage: INSTALL.sh install/update'
  exit
 fi
-
-x=0
 if [ $1 = install ]; then
-    x=1
-fi
-if [ $1 = update ]; then
-    x=2
-fi
-if [ $x = 0 ]; then
- echo 'Useage: INSTALL.sh install/update'
- exit
+    echo '+-- Install Plugin'
+elif [ $1 = update ]; then
+    echo '+-- Update Plugin'
+else
+    echo 'Useage: INSTALL.sh install/update'
+    exit
 fi
 
-#配置插件加载
-pathogen=1 #插件管理A 
-Bundle=0   #插件管理B 安装依赖Git
-emmet=1
-neocomplcache=1
-a=1
-c=0  #安装之后打开vim会卡顿
-phpdoc=1
-phphelp=1
-bufexplorer=1
-DoxygenToolkit=1
-MiniBufExplorer=1
-NERD_tree=1
-Taglist=1
-winmanager=1
-Ctags=1
-Cscope=1
+if [ -f ~/.vimrc ]; then
+    read -s -n1 -p "[~/.vimrc] already exists. Press any key to continue (y/n) : "
+    if [ $REPLY != 'y' ]; then
+      echo "$REPLY"
+      echo ""
+      exit
+    fi
+    echo ""
+fi
+if [ -f ~/.ctags ]; then
+    read -s -n1 -p "[~/.ctags] already exists. Press any key to continue (y/n) : "
+    if [ $REPLY != 'y' ]; then
+      echo "$REPLY"
+      echo ""
+      exit
+    fi
+    echo ""
+fi
 
-dir=`pwd`
-zip=$dir/PluginPackage
+cp _.vimrc ~/.vimrc
+cp _.ctags ~/.ctags
+if [ ! -d ~/.vimconfig ]; then
+    mkdir ~/.vimconfig
+fi
+cp _.vimconfig/* ~/.vimconfig/
 
-echo '开始安装......';
+vim=~/.vim
+if [ $1 = install ]; then
+    if [ ! -d $vim/autoload ]; then
+        echo "+-- mkdir $vim/..."
+        mkdir -p $vim/autoload
+        mkdir -p $vim/bundle
+    fi
+fi
+
+# 插件安装
+do=$1
+inup() {
+    echo -e "\n"
+    echo +-- Plugin : $1
+    gitname=`echo ${2##*/} | cut -d "." -f1`
+    vimbin="$vim/bundle/$gitname"
+    if [ $do = install ]; then
+    	if [ -d "$vimbin" ]; then
+    	    cd "$vimbin"
+    	    git pull
+        else
+            cd $vim/bundle
+            git clone $2 "$vimbin"
+    	fi
+    fi
+    if [ $do = update ]; then
+        cd "$vimbi"
+        git pull
+    fi
+    echo -e "\n"
+}
+# 字体安装
+setfont() {
+    if [ ! -d ./fonts ]; then
+        mkdir ./fonts
+    fi
+    if [ ! -f "./fonts/${1}" ]; then
+        curl -fLo "./fonts/${1}" $2 
+    fi
+    # Set source and target directories
+    powerline_fonts_dir=$( cd "$( dirname "$0" )" && pwd )
+    
+    find_command="find \"$powerline_fonts_dir\" \( -name '*.[o,t]tf' -or -name '*.pcf.gz' \) -type f -print0"
+    
+    if [[ `uname` == 'Darwin' ]]; then
+      # MacOS
+      font_dir="$HOME/Library/Fonts"
+    else
+      # Linux
+      font_dir="$HOME/.local/share/fonts"
+      mkdir -p $font_dir
+    fi
+    
+    # Copy all fonts to user fonts directory
+    echo "Copying fonts..."
+    eval $find_command | xargs -0 -I % cp "%" "$font_dir/"
+    
+    # Reset font cache on Linux
+    if command -v fc-cache @>/dev/null ; then
+        echo "Resetting font cache, this may take a moment..."
+        fc-cache -f $font_dir
+    fi
+    
+    echo "All Powerline fonts installed to $font_dir"
+    echo -e '\033[01;31m'若您使用Terminal连接远程vim, 则Terminal同样需支持Poweroline字体.'\033[00m'
+    echo ''
+    echo ''
+}
+
+#目录浏览
+#inup Nerdtree http://github.com/scrooloose/nerdtree.git
+
 
 #pathogen
+# - 插件管理
 # - https://github.com/tpope/vim-pathogen
-# - 插件管理
-if [ $pathogen = 1 ]; then
-    file=$zip/pathogen.vim
-    if [ $x = 1 ]; then
-    	mkdir -p ~/.vim/autoload  ~/.vim/bundle 
-    	cp $file ~/.vim/autoload/
-        echo '                       ---> ~/.vimrc 添加  call pathogen#infect()'
-        echo '                       ---> ~/.vimrc 添加  call pathogen#helptags()'
-    fi
-    if [ $x = 2 ]; then
-    	curl -Sso ~/.vim/autoload/pathogen.vim https://raw.github.com/tpope/vim-pathogen/master/autoload/pathogen.vim
-    fi
+echo +-- Plugin : Pathogen
+#curl -LSso $vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+
+
+#插件管理(Update)
+inup Vundle https://github.com/VundleVim/Vundle.vim.git
+vim +PluginInstall +qall
+
+
+#安装状态栏插件airline需要的字体
+#https://github.com/powerline/fonts.git
+#https://github.com/ryanoasis/nerd-fonts.git
+#Anonymice Pro / monofur / Roboto Mono (Light)  / Sauce Code Powerline / Ubuntu Mono
+echo "+-- airline : Font(otf)"
+setfont "Anonymice Powerline Nerd Font Complete Mono.ttf" "https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/AnonymousPro/complete/Anonymice%20Powerline%20Nerd%20Font%20Complete%20Mono.ttf"
+
+
+echo "+-- YouCompleteMe"
+#https://github.com/Valloric/YouCompleteMe#installation
+echo -e '\033[01;31m'Install: https://github.com/Valloric/YouCompleteMe#installation.'\033[00m'
+if [[ `uname` != 'Darwin' ]]; then
+    #echo 'cd ~/.vim/bundle/YouCompleteMe/'
+    #echo './install.py --clang-completer --tern-completer'
+    #echo ''
+echo '
+$vim --version #确保vim支持:python2/3
+$apt-get install llvm-3.* clang-3.* libclang-3.*-dev libboost-all-dev
+$mkdir ~/.ycm_build && cd ~/.ycm_build
+$cmake -G "Unix Makefiles" -DUSE_SYSTEM_BOOST=ON -DUSE_SYSTEM_LIBCLANG=ON . ~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp
+#果编译结果: Using external libclang...指定的不是最新库, 删除此目录已生成的所有文件, 指定so, 重新cmake.
+$cmake -G "Unix Makefiles" -DUSE_SYSTEM_BOOST=ON -DEXTERNAL_LIBCLANG_PATH=/~lib~/libclang-3.9.so . ~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp
+$cmake --build . --target ycm_core
+'
 fi
 
-#Bundle
-# - https://github.com/gmarik/vundle.git
-# - 插件管理
-if [ $Bundle = 1 ]; then
-    file=vundle
-    if [ $x = 1 ]; then
-    	mkdir -p ~/.vim/bundle
-    	cp -a $zip/$file ~/.vim/bundle/
-        echo '                       ---> ~/.vimrc 添加  call vundle#rc() 等...'
-    fi
-    if [ $x = 2 ]; then
-        echo ' '
-    	cd ~/.vim/bundle
-        rm -rf $file
-    	git clone https://github.com/gmarik/vundle.git
-    	cd -
-    fi
-fi
+echo "$ source ~/.bashrc"
 
-
-#emmet
-# - https://github.com/mattn/emmet-vim
-# - http://www.vim.org/scripts/script.php?script_id=2981
-# - 原zencodding插件，方便补齐代码. 如  html:5  <C-Y>,
-if [ $emmet = 1 ]; then
-    file=$zip/emmet-vim
-    if [ $x = 1 ]; then
-    	cp -a $file ~/.vim/bundle/
-    	echo '                       ---> ~/.vimrc 添加  Bundle "mattn/emmet-vim"'
-    fi
-    if [ $x = 2 ]; then
-        echo ' '
-    	cd ~/.vim/bundle
-        rm -rf emmet-vim
-    	git clone https://github.com/mattn/emmet-vim.git
-    	cd -
-    fi
-fi
-
-#neocomplcache
-# - http://www.vim.org/scripts/script.php?script_id=2620
-# - https://github.com/Shougo/neocomplcache.vim/tree/master
-# - 自动补全插件
-if [ $neocomplcache = 1 ]; then
-    file=$zip/neocomplcache.vim
-    if [ $x = 1 ]; then
-    	cp -a $file ~/.vim/bundle/
-    	echo '                       ---> ~/.vimrc 添加 let g:neocomplcache_enable_at_startup = 1'
-    fi
-    if [ $x = 2 ]; then
-        echo ' '
-    	cd ~/.vim/bundle
-        rm -rf neocomplcache.vim
-    	git clone https://github.com/Shougo/neocomplcache.vim.git
-    	cd -
-    fi
-fi
-
-#a.vim
-# - http://www.vim.org/scripts/script.php?script_id=31
-# - 切换文件，如在.h和.c之间切换
-if [ $a = 1 ]; then
-    file=$zip/a.vim
-    if [ $x = 1 ]; then
-        mkdir -p ~/.vim/plugin
-    	cp $file ~/.vim/plugin/
-    fi
-fi
-#c.vim
-# - http://www.vim.org/scripts/script.php?script_id=213
-# - C
-if [ $c = 1 ]; then
-    file=$zip/cvim
-    if [ $x = 1 ]; then
-	    cp -a $file ~/.vim/bundle/
-    fi
-fi
-#phpdoc
-# - http://www.vim.org/scripts/script.php?script_id=1355
-# - 添加PHP注释 <C+P>
-# - if : tags file not sorted
-# - 打开phpmanual/doc/tags, :%sort
-if [ $a = 1 ]; then
-    file=$zip/php-doc.vim
-    if [ $x = 1 ]; then
-        mkdir -p ~/.vim/plugin
-    	cp $file ~/.vim/plugin/
-    fi
-fi
-#phphelp
-# - PHP VIM 帮助文档  <K>
-# - 下载或自己生成文档
-# - A. #paer install XML_Parser
-# - B. wget http://blog.planetxml.de/uploads/source/php/phpdoc/parser2.php.txt -O parser.php
-# - C. svn co http://svn.php.net/repository/phpdoc/modules/doc-en  OR  doc-zh
-# - D. mkdir out  & touch out/tags
-# - D. php parser.php (修改文件的路径)
-# - *. 注意重新执行parser tags会被覆盖！
-if [ $phphelp = 1 ]; then
-    file=phpdoc
-    if [ $x = 1 ]; then
-	    cp -a $zip/$file ~/.vim/
-    fi
-fi
-
-
-
-#bufexplorer
-# - http://www.vim.org/scripts/script.php?script_id=42
-# - https://github.com/vim-scripts/bufexplorer.zip.git
-# - 打开历史文件记录，试试  :\be  \bs  \bv
-if [ $bufexplorer = 1 ]; then
-    file=$zip/bufexplorer.zip
-    if [ $x = 1 ]; then
-	    cp -a $file ~/.vim/bundle/
-    fi
-    if [ $x = 2 ]; then
-        echo ' '
-    	cd ~/.vim/bundle
-        rm -rf bufexplorer.zip
-	    git clone https://github.com/vim-scripts/bufexplorer.zip.git
-    	cd -
-    fi
-fi
-
-
-#DoxygenToolkit
-# - http://www.vim.org/scripts/script.php?script_id=987
-# - https://github.com/vim-scripts/DoxygenToolkit.vim
-# - 自动注释，自定义函数
-# - :DoxLic 添加许可
-# - :DoxAuthor 添加作者
-# - :Dox 函数开头位置注释
-# - :更多用法查看HELP，可以结合doxygen自动生成各种格式的文档
-if [ $DoxygenToolkit = 1 ]; then
-    file=$zip/DoxygenToolkit.vim
-    if [ $x = 1 ]; then
-	    cp -a $file ~/.vim/bundle/
-    fi
-    if [ $x = 2 ]; then
-        echo ' '
-    	cd ~/.vim/bundle
-        rm -rf DoxygenToolkit.vim
-	    git clone https://github.com/vim-scripts/DoxygenToolkit.vim
-    	cd -
-    fi
-fi
-
-
-#MiniBufExplorer
-# - https://github.com/fholgado/minibufexpl.vim.git
-# - http://www.vim.org/scripts/script.php?script_id=159
-# - 顶部显示的窄小多文件列表
-if [ $MiniBufExplorer = 1 ]; then
-    file=minibufexpl.vim
-    if [ $x = 1 ]; then
-	    cp -a $zip/$file ~/.vim/bundle/
-    fi
-    if [ $x = 2 ]; then
-        echo ' '
-    	cd ~/.vim/bundle
-        rm -rf $file
-	    git clone https://github.com/fholgado/minibufexpl.vim.git
-    	cd -
-    fi
-fi
-
-
-#NERD_tree
-# - https://github.com/scrooloose/nerdtree
-# - 目录浏览，当前配置快捷键：F3 F4
-if [ $NERD_tree = 1 ]; then
-    file=nerdtree
-    if [ $x = 1 ]; then
-	    cp -a $zip/$file ~/.vim/bundle/
-    fi
-    if [ $x = 2 ]; then
-        echo ' '
-    	cd ~/.vim/bundle
-        rm -rf $file
-	    git clone https://github.com/scrooloose/nerdtree.git
-    	cd -
-    fi
-fi
-
-
-#Taglist
-# - http://www.vim.org/scripts/script.php?script_id=273
-# - 基于ctags分割显示代码结构
-if [ $Taglist = 1 ]; then
-    file=taglist_46
-    if [ $x = 1 ]; then
-	    cp -a $zip/$file ~/.vim/bundle/
-    fi
-fi
-
-
-#winmanager.vim
-# - http://www.vim.org/scripts/script.php?script_id=95
-# - 文件浏览&窗口管理
-if [ $winmanager = 1 ]; then
-    file=winmanager
-    if [ $x = 1 ]; then
-	    cp -a $zip/$file ~/.vim/bundle/
-    fi
-fi
-
-
-
-
-#Ctags
-# - 使用 $ctags -R 递归生成目录树的tags文件
-if [ $Ctags = 1 ]; then
-    if [ $x = 1 ]; then
-    	echo '                       ---> 需要安装 ctags 如：apt-get or yum'
-    fi
-    if [ $x = 2 ]; then
-    	echo '                       ---> 尝试升级 ctags 如：apt-get or yum'
-    fi
-fi
-
-
-#Cscope 
-# - 交互式代码跳转工具，需生成cscope文件
-if [ $Cscope = 1 ]; then
-    if [ $x = 1 ]; then
-    	echo '                       ---> 需要安装 cscope 如：apt-get or yum'
-    fi
-    if [ $x = 2 ]; then
-    	echo '                       ---> 尝试升级 cscope 如：apt-get or yum'
-    fi
-fi
-
-
-echo ' '
-echo ' '
-echo '--- 未安装插件 ---'
-echo 'Syntastic : 语法错误检查(https://github.com/scrooloose/syntastic)'
-echo ' '
-echo ' '
-
-
-echo '--- 配置~/.vimrc ---'
-if [ -f ~/.vimrc ]; then
-    #df=`diff ~/.vimrc $dir/_.vimrc > /dev/null`
-    diff ~/.vimrc $dir/_.vimrc > /dev/null
-    if [ $? = 0 ];then
-        echo '已配置成功'
-    else
-        echo '~/.vimrc 已存在，请手动复制:_.vimrc'
-    fi
-else
-    cp $dir/_.vimrc ~/.vimrc
-    echo '配置成功'
-fi
-if [ ! -d ~/.vimswp ]; then
-    mkdir ~/.vimswp
-fi
-
-echo ' '
-echo ' '
-echo '安装完成'
-echo '开启您的VIM之旅...'
