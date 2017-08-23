@@ -3,7 +3,7 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 let mapleader=","
 """ Pathogen
-execute pathogen#infect()
+"execute pathogen#infect()
 "call pathogen#helptags()
 syntax on
 filetype plugin indent on    " required
@@ -187,5 +187,5 @@ set foldmethod=marker
 " 光标行样式
 "set cursorcolumn
 "highlight CursorColumn cterm=NONE ctermbg=black ctermfg=green guibg=NONE guifg=NONE
-set cursorline
-highlight CursorLine cterm=NONE ctermbg=lightgray ctermfg=NONE guibg=NONE guifg=NONE
+"set cursorline
+"highlight CursorLine cterm=NONE ctermbg=lightgray ctermfg=NONE guibg=NONE guifg=NONE

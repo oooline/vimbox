@@ -16,8 +16,8 @@ else
 fi
 
 if [ -f ~/.vimrc ]; then
-    read -s -n1 -p "[~/.vimrc] already exists. Press any key to continue (y/n) : "
-    if [ $REPLY != 'y' ]; then
+    read -n1 -p "[~/.vimrc] already exists. Press any key to continue (y/n) : "
+    if [ "$REPLY" != 'y' ]; then
       echo "$REPLY"
       echo ""
       exit
@@ -26,7 +26,7 @@ if [ -f ~/.vimrc ]; then
 fi
 if [ -f ~/.ctags ]; then
     read -s -n1 -p "[~/.ctags] already exists. Press any key to continue (y/n) : "
-    if [ $REPLY != 'y' ]; then
+    if [ "$REPLY" != 'y' ]; then
       echo "$REPLY"
       echo ""
       exit
@@ -36,10 +36,14 @@ fi
 
 cp _.vimrc ~/.vimrc
 cp _.ctags ~/.ctags
+if [ ! -d ~/.vimswp ]; then
+    mkdir ~/.vimswp
+fi
 if [ ! -d ~/.vimconfig ]; then
     mkdir ~/.vimconfig
 fi
 cp _.vimconfig/* ~/.vimconfig/
+
 
 vim=~/.vim
 if [ $1 = install ]; then
@@ -79,6 +83,9 @@ setfont() {
     fi
     if [ ! -f "./fonts/${1}" ]; then
         curl -fLo "./fonts/${1}" $2 
+        if [ $? -gt 0 ]; then
+            echo -e '\033[01;31m'字体文件下载失败.'\033[00m'
+        fi
     fi
     # Set source and target directories
     powerline_fonts_dir=$( cd "$( dirname "$0" )" && pwd )
@@ -106,6 +113,7 @@ setfont() {
     
     echo "All Powerline fonts installed to $font_dir"
     echo -e '\033[01;31m'若您使用Terminal连接远程vim, 则Terminal同样需支持Poweroline字体.'\033[00m'
+    echo $2
     echo ''
     echo ''
 }
@@ -117,22 +125,27 @@ setfont() {
 #pathogen
 # - 插件管理
 # - https://github.com/tpope/vim-pathogen
-echo +-- Plugin : Pathogen
+#echo +-- Plugin : Pathogen
 #curl -LSso $vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
 
 
 #插件管理(Update)
-inup Vundle https://github.com/VundleVim/Vundle.vim.git
-vim +PluginInstall +qall
+####inup Vundle https://github.com/VundleVim/Vundle.vim.git
+####vim +PluginInstall +qall
 
 
 #安装状态栏插件airline需要的字体
 #https://github.com/powerline/fonts.git
 #https://github.com/ryanoasis/nerd-fonts.git
-#Anonymice Pro / monofur / Roboto Mono (Light)  / Sauce Code Powerline / Ubuntu Mono
 echo "+-- airline : Font(otf)"
-setfont "Anonymice Powerline Nerd Font Complete Mono.ttf" "https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/AnonymousPro/complete/Anonymice%20Powerline%20Nerd%20Font%20Complete%20Mono.ttf"
-
+setfont "Code New Roman Nerd Font Complete Mono.otf" "https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/CodeNewRoman/complete/Code%20New%20Roman%20Nerd%20Font%20Complete%20Mono.otf"
+# / Anonymice Pro
+# / Code New Roman
+# / Roboto Mono (Light)  
+# / Source Code Pro
+# / Sauce Code Powerline 
+# / Courier New
+# / Ubuntu Mono
 
 echo "+-- YouCompleteMe"
 #https://github.com/Valloric/YouCompleteMe#installation
@@ -141,16 +154,16 @@ if [[ `uname` != 'Darwin' ]]; then
     #echo 'cd ~/.vim/bundle/YouCompleteMe/'
     #echo './install.py --clang-completer --tern-completer'
     #echo ''
-echo '
-$vim --version #确保vim支持:python2/3
-$apt-get install llvm-3.* clang-3.* libclang-3.*-dev libboost-all-dev
-$mkdir ~/.ycm_build && cd ~/.ycm_build
-$cmake -G "Unix Makefiles" -DUSE_SYSTEM_BOOST=ON -DUSE_SYSTEM_LIBCLANG=ON . ~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp
-#果编译结果: Using external libclang...指定的不是最新库, 删除此目录已生成的所有文件, 指定so, 重新cmake.
-$cmake -G "Unix Makefiles" -DUSE_SYSTEM_BOOST=ON -DEXTERNAL_LIBCLANG_PATH=/~lib~/libclang-3.9.so . ~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp
-$cmake --build . --target ycm_core
+echo '---
+$ vim --version #确保vim支持:python2/3
+$ apt-get install llvm-3.* clang-3.* libclang-3.*-dev libboost-all-dev
+$ mkdir ~/.ycm_build && cd ~/.ycm_build
+$ cmake -G "Unix Makefiles" -DUSE_SYSTEM_BOOST=ON -DUSE_SYSTEM_LIBCLANG=ON . ~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp
+#编译结果: Using external libclang...指定的不是最新库, 删除此目录已生成的所有文件, 指定so, 重新cmake.
+$ cmake -G "Unix Makefiles" -DUSE_SYSTEM_BOOST=ON -DEXTERNAL_LIBCLANG_PATH=/~lib~/libclang-3.9.so . ~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp
+$ cmake --build . --target ycm_core
 '
 fi
 
-echo "$ source ~/.bashrc"
+echo "$ cat _.bashrc >> ~/.bashrc && source ~/.bashrc"
 

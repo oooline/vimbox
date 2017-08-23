@@ -2,7 +2,7 @@
 "Help(install)$vim:PluginInstall
 set nocompatible              " be iMproved, required
 filetype off                  " required
-set rtp+=~/.vim/bundle/Vundle.vim
+set rtp+=~/.vim/bundle/Vundle
 call vundle#begin()
 " 插件管理
 Plugin 'VundleVim/Vundle.vim'
